@@ -38,7 +38,7 @@ python3 -m http.server 80
 
 1. Kopiere `index.html` in dein nginx Webroot:
 ```bash
-sudo cp index.html /var/www/html/
+sudo cp index.html /var/www/html/ (ich habs in /srv/www)
 ```
 
 2. Nginx Konfiguration für deine Domain (z.B. `/etc/nginx/sites-available/josua-lucas.de`):
