@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wort-Zuordnungsspiel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-width: 400px;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #333;
+        }
+        
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        button {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button.secondary {
+            background-color: #2196F3;
+            margin-top: 0.5rem;
+        }
+        
+        button.secondary:hover {
+            background-color: #1976D2;
+        }
+        
+        .error {
+            color: red;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .lobby-container {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .lobby-main {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .players-list {
+            background: #f9f9f9;
+            padding: 1rem;
+            border-radius: 5px;
+            min-width: 200px;
+        }
+        
+        .players-list h3 {
+            margin-bottom: 1rem;
+        }
+        
+        .player-item {
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: white;
+            border-radius: 3px;
+        }
+        
+        .lobby-code {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4CAF50;
+            margin: 2rem 0;
+        }
+        
+        .waiting-text {
+            font-size: 1.2rem;
+            color: #666;
+            margin: 2rem 0;
+        }
+        
+        .progress {
+            margin: 1rem 0;
+            font-size: 1.1rem;
+            color: #2196F3;
+        }
+        
+        /* Seite 4 - Karten Styles */
+        .cards-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background: #fafafa;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .card {
+            position: absolute;
+            width: 150px;
+            padding: 1rem;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: move;
+            user-select: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s;
+            text-align: center;
+            font-size: 1rem;
+        }
+        
+        .card.dragging {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        
+        .card.word-card {
+            background-color: #e3f2fd;
+            border-color: #2196F3;
+        }
+        
+        .card.name-card {
+            background-color: #f1f8e9;
+            border-color: #4CAF50;
+        }
+        
+        .restart-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: auto;
+            padding: 0.8rem 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Seite 1: Name eingeben -->
+        <div id="page1" class="page active">
+            <h1>Willkommen zum Wort-Zuordnungsspiel!</h1>
+            <input type="text" id="nameInput" placeholder="Dein Name" maxlength="20">
+            <button onclick="submitName()">Los geht's</button>
+            <div class="error" id="nameError"></div>
+        </div>
+        
+        <!-- Seite 2.0: Raum erstellen oder beitreten -->
+        <div id="page2_0" class="page">
+            <h1>Was möchtest du tun?</h1>
+            <button onclick="showCreateLobby()">Neuen Raum erstellen</button>
+            <button class="secondary" onclick="showJoinLobby()">Raum beitreten</button>
+        </div>
+        
+        <!-- Seite 2.1: Lobby -->
+        <div id="page2_1" class="page">
+            <div class="lobby-container">
+                <div class="lobby-main">
+                    <h2>Lobby</h2>
+                    <div class="lobby-code" id="lobbyCode"></div>
+                    <button id="startGameBtn" onclick="startGame()" style="display:none;">Spiel starten</button>
+                </div>
+                <div class="players-list">
+                    <h3>Spieler:</h3>
+                    <div id="playersList"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Seite 2.2: Raum beitreten -->
+        <div id="page2_2" class="page">
+            <h2>Raum beitreten</h2>
+            <input type="text" id="lobbyCodeInput" placeholder="Raum-Code eingeben" maxlength="6" style="text-transform: uppercase;">
+            <button onclick="joinLobby()">Raum beitreten</button>
+            <button class="secondary" onclick="showPage('page2_0')">Zurück</button>
+            <div class="error" id="joinError"></div>
+        </div>
+        
+        <!-- Seite 3: Wort eingeben -->
+        <div id="page3" class="page">
+            <h2>Gib ein Wort oder mehrere Worte ein</h2>
+            <input type="text" id="wordInput" placeholder="Dein(e) Wort(e)">
+            <button onclick="submitWord()">Absenden</button>
+            <div class="waiting-text" id="waitingText" style="display:none;">Auf andere Nutzer warten...</div>
+            <div class="progress" id="progressText"></div>
+        </div>
+        
+        <!-- Seite 4: Karten zuordnen -->
+        <div id="page4" class="page">
+            <h2>Ordne die Begriffe den Spielern zu</h2>
+            <div class="cards-container" id="cardsContainer">
+                <button class="restart-button" id="restartBtn" onclick="restartGame()" style="display:none;">Spiel neu starten</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Globale Variablen
+        let ws = null;
+        let playerName = '';
+        let currentLobbyId = null;
+        let isCreator = false;
+        let players = [];
+        let draggedElement = null;
+        
+        // WebSocket Verbindung herstellen
+        function connectWebSocket() {
+            // Verwende ws:// für lokale Entwicklung, wss:// für Produktion mit SSL
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const wsUrl = `${protocol}${window.location.hostname}:8080`;
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                console.log('WebSocket verbunden');
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log('Nachricht erhalten:', data);
+                handleWebSocketMessage(data);
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket Fehler:', error);
+                alert('Verbindungsfehler! Bitte Seite neu laden.');
+            };
+            
+            ws.onclose = () => {
+                console.log('WebSocket Verbindung geschlossen');
+                alert('Verbindung verloren! Bitte Seite neu laden.');
+            };
+        }
+        
+        // WebSocket Nachrichten verarbeiten
+        function handleWebSocketMessage(data) {
+            switch(data.type) {
+                case 'connected':
+                    console.log('Verbunden mit ID:', data.clientId);
+                    break;
+                    
+                case 'nameSet':
+                    if (data.success) {
+                        showPage('page2_0');
+                    }
+                    break;
+                    
+                case 'lobbyCreated':
+                    currentLobbyId = data.lobbyId;
+                    isCreator = data.isCreator;
+                    players = data.players;
+                    updateLobbyView();
+                    showPage('page2_1');
+                    break;
+                    
+                case 'lobbyJoined':
+                    currentLobbyId = data.lobbyId;
+                    isCreator = data.isCreator;
+                    players = data.players;
+                    updateLobbyView();
+                    showPage('page2_1');
+                    break;
+                    
+                case 'joinError':
+                    document.getElementById('joinError').textContent = data.message;
+                    break;
+                    
+                case 'playerJoined':
+                    players = data.players;
+                    updatePlayersList();
+                    break;
+                    
+                case 'playerLeft':
+                    players = data.players;
+                    isCreator = data.creator === ws.clientId;
+                    updatePlayersList();
+                    updateLobbyView();
+                    break;
+                    
+                case 'gameStarted':
+                    showPage('page3');
+                    document.getElementById('wordInput').value = '';
+                    document.getElementById('wordInput').disabled = false; // Input wieder aktivieren
+                    document.querySelector('#page3 button').disabled = false; // Button auch aktivieren
+                    document.getElementById('waitingText').style.display = 'none';
+                    document.getElementById('progressText').textContent = '';
+                    break;
+                    
+                case 'wordSubmitted':
+                    document.getElementById('progressText').textContent = 
+                        `${data.submittedCount} von ${data.totalPlayers} Spielern haben ihr Wort abgegeben`;
+                    break;
+                    
+                case 'allWordsSubmitted':
+                    showCardsPage(data.words, data.players);
+                    break;
+                    
+                case 'gameRestarted':
+                    showPage('page3');
+                    document.getElementById('wordInput').value = '';
+                    document.getElementById('wordInput').disabled = false; // Input wieder aktivieren
+                    document.querySelector('#page3 button').disabled = false; // Button auch aktivieren
+                    document.getElementById('waitingText').style.display = 'none';
+                    document.getElementById('progressText').textContent = '';
+                    break;
+            }
+        }
+        
+        // Seite wechseln
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+        }
+        
+        // Name eingeben (Seite 1)
+        function submitName() {
+            const nameInput = document.getElementById('nameInput');
+            const name = nameInput.value.trim();
+            
+            if (name.length < 2) {
+                document.getElementById('nameError').textContent = 'Bitte gib einen Namen ein (mind. 2 Zeichen)';
+                return;
+            }
+            
+            playerName = name;
+            connectWebSocket();
+            
+            // Warte kurz auf Verbindung
+            setTimeout(() => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'setName', name: playerName }));
+                } else {
+                    document.getElementById('nameError').textContent = 'Verbindungsfehler. Bitte neu laden.';
+                }
+            }, 500);
+        }
+        
+        // Lobby erstellen
+        function showCreateLobby() {
+            ws.send(JSON.stringify({ type: 'createLobby' }));
+        }
+        
+        // Lobby beitreten Dialog
+        function showJoinLobby() {
+            showPage('page2_2');
+            document.getElementById('lobbyCodeInput').value = '';
+            document.getElementById('joinError').textContent = '';
+        }
+        
+        // Lobby beitreten
+        function joinLobby() {
+            const code = document.getElementById('lobbyCodeInput').value.trim().toUpperCase();
+            if (code.length !== 6) {
+                document.getElementById('joinError').textContent = 'Bitte gib einen 6-stelligen Code ein';
+                return;
+            }
+            
+            ws.send(JSON.stringify({ type: 'joinLobby', lobbyId: code }));
+        }
+        
+        // Lobby View aktualisieren
+        function updateLobbyView() {
+            document.getElementById('lobbyCode').textContent = currentLobbyId;
+            document.getElementById('startGameBtn').style.display = isCreator ? 'block' : 'none';
+            updatePlayersList();
+        }
+        
+        // Spielerliste aktualisieren
+        function updatePlayersList() {
+            const playersList = document.getElementById('playersList');
+            playersList.innerHTML = '';
+            
+            players.forEach(player => {
+                const playerDiv = document.createElement('div');
+                playerDiv.className = 'player-item';
+                playerDiv.textContent = player.name;
+                playersList.appendChild(playerDiv);
+            });
+        }
+        
+        // Spiel starten
+        function startGame() {
+            if (isCreator) {
+                ws.send(JSON.stringify({ type: 'startGame' }));
+            }
+        }
+        
+        // Wort absenden
+        function submitWord() {
+            const wordInput = document.getElementById('wordInput');
+            const word = wordInput.value.trim();
+            
+            if (word.length === 0) {
+                alert('Bitte gib ein Wort ein!');
+                return;
+            }
+            
+            ws.send(JSON.stringify({ type: 'submitWord', word }));
+            wordInput.disabled = true;
+            document.querySelector('#page3 button').disabled = true; // Button auch deaktivieren
+            document.getElementById('waitingText').style.display = 'block';
+        }
+        
+        // Karten-Seite anzeigen
+        function showCardsPage(words, playersList) {
+            showPage('page4');
+            const container = document.getElementById('cardsContainer');
+            
+            // Lösche alte Karten (außer Restart-Button)
+            const cards = container.querySelectorAll('.card');
+            cards.forEach(card => card.remove());
+            
+            // Zeige Restart-Button nur für Creator
+            document.getElementById('restartBtn').style.display = isCreator ? 'block' : 'none';
+            
+            // Erstelle Karten
+            const allCards = [];
+            
+            // Wort-Karten
+            words.forEach((item, index) => {
+                const card = createCard(item.word, 'word-card', index);
+                allCards.push(card);
+            });
+            
+            // Namen-Karten
+            playersList.forEach((player, index) => {
+                const card = createCard(player.name, 'name-card', index + words.length);
+                allCards.push(card);
+            });
+            
+            // Zufällige Positionen
+            allCards.forEach(card => {
+                const maxX = container.offsetWidth - 170;
+                const maxY = container.offsetHeight - 100;
+                const x = Math.random() * maxX + 10;
+                const y = Math.random() * maxY + 10;
+                
+                card.style.left = x + 'px';
+                card.style.top = y + 'px';
+                container.appendChild(card);
+            });
+        }
+        
+        // Karte erstellen
+        function createCard(text, className, index) {
+            const card = document.createElement('div');
+            card.className = `card ${className}`;
+            card.textContent = text;
+            card.draggable = true;
+            
+            // Drag & Drop Events
+            card.addEventListener('dragstart', handleDragStart);
+            card.addEventListener('dragend', handleDragEnd);
+            
+            // Touch Events für Mobile
+            card.addEventListener('touchstart', handleTouchStart, { passive: false });
+            card.addEventListener('touchmove', handleTouchMove, { passive: false });
+            card.addEventListener('touchend', handleTouchEnd);
+            
+            return card;
+        }
+        
+        // Drag & Drop Handlers
+        function handleDragStart(e) {
+            draggedElement = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+        
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            draggedElement = null;
+        }
+        
+        // Touch Handlers für Mobile
+        let touchItem = null;
+        let touchOffset = { x: 0, y: 0 };
+        
+        function handleTouchStart(e) {
+            touchItem = e.target;
+            const touch = e.touches[0];
+            const rect = touchItem.getBoundingClientRect();
+            touchOffset.x = touch.clientX - rect.left;
+            touchOffset.y = touch.clientY - rect.top;
+            touchItem.classList.add('dragging');
+        }
+        
+        function handleTouchMove(e) {
+            if (!touchItem) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const container = document.getElementById('cardsContainer');
+            const containerRect = container.getBoundingClientRect();
+            
+            let x = touch.clientX - containerRect.left - touchOffset.x;
+            let y = touch.clientY - containerRect.top - touchOffset.y;
+            
+            // Begrenze auf Container
+            x = Math.max(0, Math.min(x, containerRect.width - touchItem.offsetWidth));
+            y = Math.max(0, Math.min(y, containerRect.height - touchItem.offsetHeight));
+            
+            touchItem.style.left = x + 'px';
+            touchItem.style.top = y + 'px';
+        }
+        
+        function handleTouchEnd(e) {
+            if (touchItem) {
+                touchItem.classList.remove('dragging');
+                touchItem = null;
+            }
+        }
+        
+        // Drag over Container für Desktop
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('cardsContainer');
+            
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (!draggedElement) return;
+                
+                const containerRect = container.getBoundingClientRect();
+                let x = e.clientX - containerRect.left - draggedElement.offsetWidth / 2;
+                let y = e.clientY - containerRect.top - draggedElement.offsetHeight / 2;
+                
+                // Begrenze auf Container
+                x = Math.max(0, Math.min(x, containerRect.width - draggedElement.offsetWidth));
+                y = Math.max(0, Math.min(y, containerRect.height - draggedElement.offsetHeight));
+                
+                draggedElement.style.left = x + 'px';
+                draggedElement.style.top = y + 'px';
+            });
+        });
+        
+        // Spiel neu starten
+        function restartGame() {
+            if (isCreator) {
+                ws.send(JSON.stringify({ type: 'restartGame' }));
+            }
+        }
+        
+        // Enter-Taste Support
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('nameInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') submitName();
+            });
+            
+            document.getElementById('lobbyCodeInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') joinLobby();
+            });
+            
+            document.getElementById('wordInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') submitWord();
+            });
+        });
+    </script>
+</body>
+</html>
