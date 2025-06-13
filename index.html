@@ -255,8 +255,9 @@
         function connectWebSocket() {
             // Verwende ws:// für lokale Entwicklung, wss:// für Produktion mit SSL
             const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+          
             //const wsUrl = `${protocol}${window.location.hostname}:8080`;
-            const wsUrl = `${protocol}${window.location.hostname}:ws`;
+           const wsUrl = `${protocol}${window.location.hostname}/ws`;
             ws = new WebSocket(wsUrl);
             
             ws.onopen = () => {
