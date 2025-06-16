@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Martin Luther Quiz - 8. Klasse</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .quiz-info {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #666;
+        }
+
+        .question-container {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .answers {
+            display: grid;
+            gap: 10px;
+        }
+
+        .answer-btn {
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-size: 1.1em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .answer-btn:hover {
+            background: #f0f0f0;
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .answer-btn.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .answer-btn.correct {
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
+            animation: pulse 0.5s;
+        }
+
+        .answer-btn.incorrect {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+            animation: shake 0.5s;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .progress {
+            font-size: 1.1em;
+            color: #666;
+        }
+
+        .result-container {
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .score {
+            font-size: 3em;
+            color: #667eea;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .feedback {
+            font-size: 1.3em;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .start-screen {
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .start-btn {
+            margin-top: 30px;
+            font-size: 1.3em;
+            padding: 15px 40px;
+        }
+
+        .explanation {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            color: #2e7d32;
+            font-style: italic;
+            display: none;
+        }
+
+        .explanation.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Martin Luther Quiz</h1>
+        
+        <div id="startScreen" class="start-screen">
+            <div class="quiz-info">
+                <p style="font-size: 1.2em; margin-bottom: 10px;">Teste dein Wissen über Martin Luther!</p>
+                <p>25 Fragen • Für die 8. Klasse</p>
+            </div>
+            <button class="btn start-btn" onclick="startQuiz()">Quiz starten</button>
+        </div>
+
+        <div id="quizContainer" style="display: none;">
+            <div class="progress" id="progress"></div>
+            <div id="questionContainer" class="question-container"></div>
+            <div class="controls">
+                <button class="btn" id="prevBtn" onclick="previousQuestion()">Zurück</button>
+                <button class="btn" id="nextBtn" onclick="nextQuestion()">Weiter</button>
+            </div>
+        </div>
+
+        <div id="resultContainer" class="result-container" style="display: none;">
+            <h2>Quiz beendet!</h2>
+            <div class="score" id="score"></div>
+            <div class="feedback" id="feedback"></div>
+            <button class="btn" onclick="restartQuiz()">Nochmal spielen</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "In welchem Jahr wurde Martin Luther geboren?",
+                answers: ["1483", "1492", "1517", "1450"],
+                correct: 0,
+                explanation: "Martin Luther wurde am 10. November 1483 in Eisleben geboren."
+            },
+            {
+                question: "In welcher Stadt schlug Luther seine 95 Thesen an?",
+                answers: ["Berlin", "Wittenberg", "Leipzig", "Erfurt"],
+                correct: 1,
+                explanation: "Am 31. Oktober 1517 schlug Luther seine 95 Thesen an die Tür der Schlosskirche in Wittenberg."
+            },
+            {
+                question: "Was war Luthers ursprünglicher Berufswunsch seiner Eltern?",
+                answers: ["Priester", "Lehrer", "Jurist", "Arzt"],
+                correct: 2,
+                explanation: "Luthers Vater wollte, dass Martin Jurist wird."
+            },
+            {
+                question: "Welches Ereignis führte dazu, dass Luther Mönch wurde?",
+                answers: ["Ein Gewitter bei Stotternheim", "Eine schwere Krankheit", "Der Tod eines Freundes", "Ein Traum"],
+                correct: 0,
+                explanation: "Nach einem Gewitter bei Stotternheim gelobte Luther, Mönch zu werden."
+            },
+            {
+                question: "In welchem Jahr veröffentlichte Luther seine 95 Thesen?",
+                answers: ["1515", "1517", "1520", "1525"],
+                correct: 1,
+                explanation: "Die 95 Thesen wurden am 31. Oktober 1517 veröffentlicht."
+            },
+            {
+                question: "Was kritisierte Luther hauptsächlich in seinen 95 Thesen?",
+                answers: ["Die Bibel", "Den Ablasshandel", "Die Ehe", "Das Gebet"],
+                correct: 1,
+                explanation: "Luther kritisierte vor allem den Ablasshandel der katholischen Kirche."
+            },
+            {
+                question: "Wie hieß der Papst, der Luther exkommunizierte?",
+                answers: ["Johannes XXIII.", "Leo X.", "Pius V.", "Paul III."],
+                correct: 1,
+                explanation: "Papst Leo X. exkommunizierte Luther im Jahr 1521."
+            },
+            {
+                question: "Auf welchem Reichstag musste Luther seine Lehren verteidigen?",
+                answers: ["Reichstag zu Augsburg", "Reichstag zu Worms", "Reichstag zu Speyer", "Reichstag zu Nürnberg"],
+                correct: 1,
+                explanation: "Auf dem Reichstag zu Worms 1521 verteidigte Luther seine Lehren."
+            },
+            {
+                question: "Welcher Fürst versteckte Luther auf der Wartburg?",
+                answers: ["Friedrich der Weise", "Karl V.", "Herzog Georg", "Philipp von Hessen"],
+                correct: 0,
+                explanation: "Friedrich der Weise von Sachsen ließ Luther zum Schutz auf die Wartburg bringen."
+            },
+            {
+                question: "Unter welchem Namen lebte Luther auf der Wartburg?",
+                answers: ["Bruder Martin", "Junker Jörg", "Meister Hans", "Ritter Georg"],
+                correct: 1,
+                explanation: "Luther lebte unter dem Decknamen 'Junker Jörg' auf der Wartburg."
+            },
+            {
+                question: "Was übersetzte Luther auf der Wartburg?",
+                answers: ["Die Psalmen", "Das Neue Testament", "Die Apokryphen", "Kirchenlieder"],
+                correct: 1,
+                explanation: "Luther übersetzte das Neue Testament ins Deutsche während seines Aufenthalts auf der Wartburg."
+            },
+            {
+                question: "In welcher Sprache war die Bibel vor Luthers Übersetzung hauptsächlich verfügbar?",
+                answers: ["Griechisch", "Hebräisch", "Lateinisch", "Französisch"],
+                correct: 2,
+                explanation: "Die Bibel war hauptsächlich in Lateinisch verfügbar (Vulgata)."
+            },
+            {
+                question: "Wen heiratete Martin Luther?",
+                answers: ["Anna von Bora", "Katharina von Bora", "Elisabeth von Meißen", "Maria von Sachsen"],
+                correct: 1,
+                explanation: "Luther heiratete 1525 die ehemalige Nonne Katharina von Bora."
+            },
+            {
+                question: "Wie viele Kinder hatten Martin und Katharina Luther?",
+                answers: ["3", "4", "6", "8"],
+                correct: 2,
+                explanation: "Martin und Katharina Luther hatten sechs Kinder."
+            },
+            {
+                question: "Was ist die Kernaussage von Luthers Rechtfertigungslehre?",
+                answers: ["Allein durch gute Werke", "Allein durch den Glauben", "Durch Geld und Spenden", "Durch Pilgerreisen"],
+                correct: 1,
+                explanation: "Luther lehrte die Rechtfertigung 'sola fide' - allein durch den Glauben."
+            },
+            {
+                question: "Welches wichtige Prinzip vertrat Luther bezüglich der Bibel?",
+                answers: ["Nur Priester dürfen sie lesen", "Sola scriptura - allein die Schrift", "Sie ist unwichtig", "Nur auf Lateinisch gültig"],
+                correct: 1,
+                explanation: "'Sola scriptura' bedeutet, dass allein die Heilige Schrift Grundlage des Glaubens ist."
+            },
+            {
+                question: "Welches Sakrament lehnte Luther NICHT ab?",
+                answers: ["Firmung", "Letzte Ölung", "Taufe", "Priesterweihe"],
+                correct: 2,
+                explanation: "Luther behielt nur zwei Sakramente bei: Taufe und Abendmahl."
+            },
+            {
+                question: "Wie nannte man die Anhänger von Luthers Lehren?",
+                answers: ["Katholiken", "Protestanten", "Orthodoxe", "Calvinisten"],
+                correct: 1,
+                explanation: "Die Anhänger der Reformation wurden Protestanten genannt."
+            },
+            {
+                question: "In welchem Jahr starb Martin Luther?",
+                answers: ["1540", "1546", "1550", "1556"],
+                correct: 1,
+                explanation: "Martin Luther starb am 18. Februar 1546 in Eisleben."
+            },
+            {
+                question: "Welches berühmte Kirchenlied schrieb Luther?",
+                answers: ["Stille Nacht", "Ein feste Burg ist unser Gott", "Großer Gott, wir loben dich", "O du fröhliche"],
+                correct: 1,
+                explanation: "'Ein feste Burg ist unser Gott' ist Luthers bekanntestes Kirchenlied."
+            },
+            {
+                question: "Was war der Augsburger Religionsfrieden von 1555?",
+                answers: ["Verbot des Protestantismus", "Anerkennung beider Konfessionen", "Luthers Testament", "Ende der Reformation"],
+                correct: 1,
+                explanation: "Der Augsburger Religionsfrieden erkannte beide Konfessionen im Reich an."
+            },
+            {
+                question: "Welche Erfindung half bei der Verbreitung von Luthers Schriften?",
+                answers: ["Das Radio", "Der Buchdruck", "Die Schreibmaschine", "Das Internet"],
+                correct: 1,
+                explanation: "Der Buchdruck von Gutenberg ermöglichte die massenhafte Verbreitung von Luthers Schriften."
+            },
+            {
+                question: "Was bedeutet das Wort 'Reformation'?",
+                answers: ["Zerstörung", "Erneuerung", "Rückschritt", "Beendigung"],
+                correct: 1,
+                explanation: "Reformation bedeutet 'Erneuerung' oder 'Wiederherstellung'."
+            },
+            {
+                question: "Welchen Orden gehörte Luther als Mönch an?",
+                answers: ["Franziskaner", "Dominikaner", "Augustiner", "Benediktiner"],
+                correct: 2,
+                explanation: "Luther war Mönch im Augustinerorden."
+            },
+            {
+                question: "Was ist das wichtigste Datum der Reformation?",
+                answers: ["25. Dezember", "31. Oktober", "1. Januar", "15. August"],
+                correct: 1,
+                explanation: "Der 31. Oktober (Reformationstag) erinnert an den Thesenanschlag 1517."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let answers = new Array(questions.length).fill(null);
+
+        function startQuiz() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('quizContainer').style.display = 'block';
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const question = questions[currentQuestion];
+            const container = document.getElementById('questionContainer');
+            
+            container.innerHTML = `
+                <div class="question">Frage ${currentQuestion + 1}: ${question.question}</div>
+                <div class="answers">
+                    ${question.answers.map((answer, index) => `
+                        <button class="answer-btn ${answers[currentQuestion] === index ? 'selected' : ''}" 
+                                onclick="selectAnswer(${index})" 
+                                id="answer-${index}">
+                            ${String.fromCharCode(65 + index)}) ${answer}
+                        </button>
+                    `).join('')}
+                </div>
+                <div class="explanation" id="explanation">
+                    <strong>Erklärung:</strong> ${question.explanation}
+                </div>
+            `;
+
+            updateProgress();
+            updateButtons();
+        }
+
+        function selectAnswer(index) {
+            answers[currentQuestion] = index;
+            
+            // Update selected state
+            document.querySelectorAll('.answer-btn').forEach((btn, i) => {
+                btn.classList.toggle('selected', i === index);
+            });
+
+            // Show correct/incorrect state
+            const question = questions[currentQuestion];
+            document.querySelectorAll('.answer-btn').forEach((btn, i) => {
+                if (i === question.correct) {
+                    btn.classList.add('correct');
+                } else if (i === index && i !== question.correct) {
+                    btn.classList.add('incorrect');
+                }
+                btn.style.pointerEvents = 'none';
+            });
+
+            // Show explanation
+            document.getElementById('explanation').classList.add('show');
+
+            updateButtons();
+        }
+
+        function updateProgress() {
+            document.getElementById('progress').textContent = 
+                `Frage ${currentQuestion + 1} von ${questions.length}`;
+        }
+
+        function updateButtons() {
+            document.getElementById('prevBtn').disabled = currentQuestion === 0;
+            document.getElementById('nextBtn').textContent = 
+                currentQuestion === questions.length - 1 ? 'Beenden' : 'Weiter';
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function calculateScore() {
+            score = 0;
+            answers.forEach((answer, index) => {
+                if (answer === questions[index].correct) {
+                    score++;
+                }
+            });
+            return score;
+        }
+
+        function showResults() {
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('resultContainer').style.display = 'block';
+            
+            const finalScore = calculateScore();
+            const percentage = Math.round((finalScore / questions.length) * 100);
+            
+            document.getElementById('score').textContent = `${finalScore} / ${questions.length}`;
+            
+            let feedback = '';
+            if (percentage >= 90) {
+                feedback = '🏆 Hervorragend! Du bist ein Luther-Experte!';
+            } else if (percentage >= 70) {
+                feedback = '👏 Gut gemacht! Du kennst dich gut aus!';
+            } else if (percentage >= 50) {
+                feedback = '👍 Nicht schlecht! Mit etwas Übung wirst du noch besser!';
+            } else {
+                feedback = '💪 Weiter lernen! Luther hat eine spannende Geschichte!';
+            }
+            
+            document.getElementById('feedback').innerHTML = 
+                `${feedback}<br>Du hast ${percentage}% der Fragen richtig beantwortet.`;
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            answers = new Array(questions.length).fill(null);
+            
+            document.getElementById('resultContainer').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

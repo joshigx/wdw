@@ -16,14 +16,15 @@ server {
        try_files $uri $uri/ =404;
   }
 
-location = /greeting.php {
-    return 301 /;
-    # return 404
-}
 
     location ~ ^/hallo/(.+)$ {
     try_files $uri /greeting.php$is_args$args;
 }
+
+    location = /luther {
+    try_files $uri /quiz/luther.html;
+}
+
 
 
    location ~ \.php$ {
