@@ -16,6 +16,16 @@ server {
        try_files $uri $uri/ =404;
   }
 
+location = /greeting.php {
+    return 301 /;
+    # return 404
+}
+
+    location ~ ^/hallo/(.+)$ {
+    try_files $uri /greeting.php$is_args$args;
+}
+
+
    location ~ \.php$ {
         include snippets/fastcgi-php.conf;
         fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
