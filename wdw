@@ -21,7 +21,7 @@ server {
     try_files $uri /greeting.php$is_args$args;
 }
 
-    location = /luther {
+    location =/luther {
     try_files $uri /quiz/luther.html;
 }
 
